@@ -95,7 +95,7 @@ const LawyerDirectory = () => {
               <SelectValue placeholder="All Specializations" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Specializations</SelectItem>
+              <SelectItem value="all">All Specializations</SelectItem>
               <SelectItem value="education">Education Law</SelectItem>
               <SelectItem value="sports">Sports Law</SelectItem>
               <SelectItem value="finance">Finance Law</SelectItem>
