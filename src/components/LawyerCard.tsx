@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Star, MessageCircle, CreditCard, ExternalLink, Clock } from "lucide-react";
 import { 
@@ -50,8 +49,6 @@ const LawyerCard = ({
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   
   const handlePayment = () => {
-    // In a real implementation, this would trigger a payment flow with Stripe or Razorpay
-    // For this demo, we'll just simulate a successful payment
     setTimeout(() => {
       setIsPaid(true);
       setPaymentDialogOpen(false);
@@ -69,7 +66,10 @@ const LawyerCard = ({
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />
         <div className="absolute top-2 right-2">
-          <Badge variant={isAvailableNow ? "success" : "secondary"} className={`${isAvailableNow ? 'bg-green-500' : 'bg-gray-200'}`}>
+          <Badge 
+            variant={isAvailableNow ? "secondary" : "outline"} 
+            className={`${isAvailableNow ? 'bg-green-500 text-white' : ''}`}
+          >
             <Clock className="mr-1 h-3 w-3" />
             {availability}
           </Badge>
