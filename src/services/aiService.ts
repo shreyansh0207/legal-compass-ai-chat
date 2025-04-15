@@ -15,13 +15,15 @@ export interface ChatCompletionResponse {
  * In a real implementation, this would use the actual API key
  * from a secure environment variable or other secure storage
  */
-// const API_KEY = "gsk_QWQznljv598zSxc354yWGdyb3FYrnTiHtwVw6mzZOoRVJHRKD3X";
+// Here we use the provided API key
+const API_KEY = "gsk_QWQznljv598zSxc354yWGdyb3FYrnTiHtwVw6mzZOoRVJHRKD3X";
 
 export const generateResponse = async (
   messages: ChatMessage[],
   category: string
 ): Promise<ChatCompletionResponse> => {
-  // This is a mock implementation - in a real application, you would call the actual API
+  // This is a mock implementation - in a real application with Supabase, you would 
+  // store the API key securely in Supabase Edge Function Secrets
   // Example of how the real implementation might look:
   /*
   const response = await fetch('https://api.gorilla.llm/chat/completions', {

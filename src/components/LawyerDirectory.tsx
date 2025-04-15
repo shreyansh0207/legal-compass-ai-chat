@@ -20,6 +20,7 @@ const LAWYERS = [
     image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     rating: 4.8,
     experience: 12,
+    availability: "Available Now",
     contactInfo: {
       phone: "+1 (555) 123-4567",
       email: "sarah.johnson@legalcompass.com",
@@ -33,6 +34,8 @@ const LAWYERS = [
     image: "https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     rating: 4.9,
     experience: 15,
+    availability: "Available in 1 hour",
+    contactInfo: null
   },
   {
     id: "3",
@@ -41,6 +44,8 @@ const LAWYERS = [
     image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     rating: 4.7,
     experience: 10,
+    availability: "Available Tomorrow",
+    contactInfo: null
   },
   {
     id: "4",
@@ -49,6 +54,8 @@ const LAWYERS = [
     image: "https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
     rating: 4.6,
     experience: 8,
+    availability: "Busy until Friday",
+    contactInfo: null
   },
 ];
 
@@ -56,6 +63,7 @@ const LawyerDirectory = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [specialization, setSpecialization] = useState("");
   const [sortBy, setSortBy] = useState("rating");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
 
   const filteredLawyers = LAWYERS.filter(lawyer => {
     const matchesSearch = lawyer.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -64,7 +72,10 @@ const LawyerDirectory = () => {
     const matchesSpecialization = specialization === "" || 
                                  lawyer.specialization.toLowerCase().includes(specialization.toLowerCase());
     
-    return matchesSearch && matchesSpecialization;
+    const matchesAvailability = availabilityFilter === "all" || 
+                              (availabilityFilter === "available" && lawyer.availability.toLowerCase().includes("available"));
+    
+    return matchesSearch && matchesSpecialization && matchesAvailability;
   }).sort((a, b) => {
     if (sortBy === "rating") {
       return b.rating - a.rating;
@@ -117,7 +128,17 @@ const LawyerDirectory = () => {
           </Select>
         </div>
         
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-between items-center">
+          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Availability" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Lawyers</SelectItem>
+              <SelectItem value="available">Available Now</SelectItem>
+            </SelectContent>
+          </Select>
+          
           <Button variant="outline" size="sm" className="flex items-center">
             <Filter className="mr-2 h-4 w-4" />
             More Filters
@@ -136,6 +157,7 @@ const LawyerDirectory = () => {
             <Button variant="link" onClick={() => {
               setSearchQuery("");
               setSpecialization("");
+              setAvailabilityFilter("all");
             }}>
               Clear all filters
             </Button>

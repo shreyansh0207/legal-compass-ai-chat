@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Star, MessageCircle, CreditCard, ExternalLink } from "lucide-react";
+import { Star, MessageCircle, CreditCard, ExternalLink, Clock } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -28,6 +28,7 @@ interface LawyerCardProps {
   image: string;
   rating: number;
   experience: number;
+  availability: string;
   contactInfo?: {
     phone: string;
     email: string;
@@ -42,6 +43,7 @@ const LawyerCard = ({
   image, 
   rating, 
   experience,
+  availability,
   contactInfo
 }: LawyerCardProps) => {
   const [isPaid, setIsPaid] = useState(!!contactInfo);
@@ -56,14 +58,22 @@ const LawyerCard = ({
     }, 1500);
   };
 
+  const isAvailableNow = availability.toLowerCase().includes("available now");
+
   return (
     <Card className="overflow-hidden">
-      <div className="aspect-[3/2] w-full overflow-hidden">
+      <div className="aspect-[3/2] w-full overflow-hidden relative">
         <img 
           src={image} 
           alt={`Photo of ${name}`} 
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
         />
+        <div className="absolute top-2 right-2">
+          <Badge variant={isAvailableNow ? "success" : "secondary"} className={`${isAvailableNow ? 'bg-green-500' : 'bg-gray-200'}`}>
+            <Clock className="mr-1 h-3 w-3" />
+            {availability}
+          </Badge>
+        </div>
       </div>
       
       <CardHeader className="pb-2">
@@ -100,7 +110,7 @@ const LawyerCard = ({
       <CardFooter className="flex justify-between pt-4">
         <Button variant="outline" size="sm">
           <MessageCircle className="mr-2 h-4 w-4" />
-          Chat with Lawyer
+          Message Lawyer
         </Button>
         
         {!isPaid ? (
@@ -108,7 +118,7 @@ const LawyerCard = ({
             <DialogTrigger asChild>
               <Button size="sm">
                 <CreditCard className="mr-2 h-4 w-4" />
-                Book Consultation
+                Pay & Book Advice
               </Button>
             </DialogTrigger>
             <DialogContent>
