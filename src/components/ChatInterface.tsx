@@ -1,10 +1,10 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Send, User, Bot, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CardFooter } from "@/components/ui/card";
 import { generateResponse, ChatMessage as AIChatMessage } from "@/services/aiService";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -23,6 +23,7 @@ const ChatInterface = ({ category, welcomeMessage }: ChatInterfaceProps) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     scrollToBottom();
@@ -44,7 +45,9 @@ const ChatInterface = ({ category, welcomeMessage }: ChatInterfaceProps) => {
     
     try {
       // Convert messages to format expected by the AI service
-      const messageHistory: AIChatMessage[] = messages.map(msg => ({
+      // Only send the last 5 messages to avoid token limits
+      const recentMessages = messages.slice(-5);
+      const messageHistory: AIChatMessage[] = recentMessages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
@@ -64,6 +67,11 @@ const ChatInterface = ({ category, welcomeMessage }: ChatInterfaceProps) => {
       }]);
     } catch (error) {
       console.error("Error fetching response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again later.",
+        variant: "destructive",
+      });
       setMessages(prev => [...prev, { 
         role: "assistant", 
         content: "I'm sorry, I encountered an error while processing your request. Please try again later." 

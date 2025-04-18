@@ -15,6 +15,8 @@ export const generateResponse = async (
   category: string
 ): Promise<ChatCompletionResponse> => {
   try {
+    console.log(`Sending request to Gorq API for category: ${category}`, messages);
+    
     const response = await fetch('https://api.gorilla.llm/chat/completions', {
       method: 'POST',
       headers: {
@@ -36,10 +38,19 @@ export const generateResponse = async (
     });
 
     if (!response.ok) {
-      throw new Error('Failed to generate response');
+      const errorText = await response.text();
+      console.error('API Error Response:', errorText);
+      throw new Error(`Failed to generate response: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Gorq API Response:', data);
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected API response format:', data);
+      throw new Error('Invalid response format from API');
+    }
+
     return {
       message: {
         role: 'assistant',
