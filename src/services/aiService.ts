@@ -27,8 +27,8 @@ export const generateResponse = async (
 
     const finalPrompt = `You are a legal assistant specialized in ${category} law. Provide accurate, helpful, and clear guidance.\n\n${prompt}`;
 
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Get the generative model - using gemini-1.5-flash instead of gemini-pro
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Generate content
     const result = await model.generateContent(finalPrompt);

@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Send, User, Bot, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,13 +59,17 @@ const ChatInterface = ({ category, welcomeMessage }: ChatInterfaceProps) => {
         content: userMessage
       });
       
-      // Call the AI service
+      // Call the AI service with error handling
       const response = await generateResponse(messageHistory, category);
       
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: response.message.content 
-      }]);
+      if (response && response.message) {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: response.message.content 
+        }]);
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
       console.error("Error fetching response:", error);
       toast({
