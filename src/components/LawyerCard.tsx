@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Star, MessageCircle, CreditCard, ExternalLink, Clock } from "lucide-react";
+import { Star, MessageCircle, CreditCard, ExternalLink, Clock, FileText, Download } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface LawyerCardProps {
   id: string;
@@ -28,6 +31,9 @@ interface LawyerCardProps {
   rating: number;
   experience: number;
   availability: string;
+  freeMessagesLimit?: number;
+  freeMessagesUsed?: number;
+  hasPdfAgreement?: boolean;
   contactInfo?: {
     phone: string;
     email: string;
@@ -43,10 +49,15 @@ const LawyerCard = ({
   rating, 
   experience,
   availability,
+  freeMessagesLimit = 5,
+  freeMessagesUsed = 0,
+  hasPdfAgreement = true,
   contactInfo
 }: LawyerCardProps) => {
   const [isPaid, setIsPaid] = useState(!!contactInfo);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   
   const handlePayment = () => {
     setTimeout(() => {
@@ -56,9 +67,11 @@ const LawyerCard = ({
   };
 
   const isAvailableNow = availability.toLowerCase().includes("available now");
+  const messagesRemaining = freeMessagesLimit - freeMessagesUsed;
+  const messagePercentUsed = (freeMessagesUsed / freeMessagesLimit) * 100;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="aspect-[3/2] w-full overflow-hidden relative">
         <img 
           src={image} 
@@ -103,15 +116,87 @@ const LawyerCard = ({
               <p><span className="font-medium">Email:</span> {contactInfo.email}</p>
               <p><span className="font-medium">Availability:</span> {contactInfo.availability}</p>
             </div>
+            {hasPdfAgreement && (
+              <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => setPdfDialogOpen(true)}>
+                <FileText className="mr-2 h-4 w-4" />
+                View Agreement Document
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!isPaid && (
+          <div className="mt-3">
+            <div className="flex justify-between items-center text-sm mb-1">
+              <span className="font-medium">Free Messages</span>
+              <span className="text-muted-foreground">{freeMessagesUsed} of {freeMessagesLimit} used</span>
+            </div>
+            <Progress value={messagePercentUsed} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              {messagesRemaining > 0 
+                ? `${messagesRemaining} free messages remaining` 
+                : "Free message limit reached"}
+            </p>
           </div>
         )}
       </CardContent>
       
       <CardFooter className="flex justify-between pt-4">
-        <Button variant="outline" size="sm">
-          <MessageCircle className="mr-2 h-4 w-4" />
-          Message Lawyer
-        </Button>
+        <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              Message Lawyer
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Message {name}</DialogTitle>
+              <DialogDescription>
+                {messagesRemaining > 0 
+                  ? `You have ${messagesRemaining} free messages remaining with this lawyer.`
+                  : "You've used all your free messages with this lawyer. Purchase a consultation for unlimited messaging."}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              {messagesRemaining > 0 ? (
+                <div>
+                  <textarea 
+                    className="w-full p-3 border rounded-md h-32 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder={`Ask ${name} a brief legal question...`}
+                  ></textarea>
+                </div>
+              ) : (
+                <div className="border rounded-lg p-4 bg-secondary/50">
+                  <p className="text-center text-sm">
+                    Purchase a consultation to continue messaging with {name}.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setMessageDialogOpen(false)}>
+                Cancel
+              </Button>
+              {messagesRemaining > 0 ? (
+                <Button>
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Send Message
+                </Button>
+              ) : (
+                <Button onClick={() => {
+                  setMessageDialogOpen(false);
+                  setPaymentDialogOpen(true);
+                }}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Purchase Consultation
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         
         {!isPaid ? (
           <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
@@ -138,6 +223,20 @@ const LawyerCard = ({
                   <p className="text-sm text-muted-foreground">
                     One-time payment for direct contact and consultation scheduling.
                   </p>
+                  <ul className="mt-3 text-sm space-y-1">
+                    <li className="flex items-center">
+                      <span className="text-green-500 mr-2">✓</span> Unlimited messaging
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-green-500 mr-2">✓</span> Direct phone contact
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-green-500 mr-2">✓</span> Legal document reviews
+                    </li>
+                    <li className="flex items-center">
+                      <span className="text-green-500 mr-2">✓</span> PDF agreement document
+                    </li>
+                  </ul>
                 </div>
                 
                 <div className="flex items-center justify-center p-4">
@@ -171,6 +270,60 @@ const LawyerCard = ({
             <ExternalLink className="mr-2 h-4 w-4" />
             Schedule Meeting
           </Button>
+        )}
+
+        {/* PDF Agreement Dialog */}
+        {hasPdfAgreement && (
+          <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Legal Consultation Agreement</DialogTitle>
+                <DialogDescription>
+                  Review the terms and conditions of your legal consultation with {name}.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="mt-4 border rounded-lg p-5 bg-secondary/30 h-[400px] overflow-y-auto">
+                <h3 className="text-lg font-bold text-center mb-4">LEGAL CONSULTATION AGREEMENT</h3>
+                <p className="mb-3">This Legal Consultation Agreement (the "Agreement") is entered into between {name} ("Attorney") and you, the client ("Client").</p>
+                
+                <h4 className="font-bold mt-4 mb-2">1. SCOPE OF SERVICES</h4>
+                <p>Attorney agrees to provide legal consultation services to Client limited to:</p>
+                <ul className="list-disc pl-5 mb-3">
+                  <li>Initial legal assessment and guidance</li>
+                  <li>Response to basic legal questions</li>
+                  <li>Preliminary review of documents</li>
+                  <li>General legal advice within Attorney's area of expertise</li>
+                </ul>
+                
+                <h4 className="font-bold mt-4 mb-2">2. FEES</h4>
+                <p>Client agrees to pay Attorney a consultation fee of $99.00. This fee is non-refundable once consultation services have begun.</p>
+                
+                <h4 className="font-bold mt-4 mb-2">3. CONFIDENTIALITY</h4>
+                <p>Attorney will maintain client confidentiality in accordance with applicable ethical rules and regulations.</p>
+                
+                <h4 className="font-bold mt-4 mb-2">4. LIMITATIONS</h4>
+                <p>This consultation does not establish an ongoing attorney-client relationship beyond the scope of the consultation.</p>
+                
+                <h4 className="font-bold mt-4 mb-2">5. TERM</h4>
+                <p>This Agreement commences upon payment and continues until consultation services are completed.</p>
+                
+                <div className="mt-8 text-center text-sm text-muted-foreground">
+                  <p>Document ID: {id}-{new Date().toISOString().split('T')[0]}</p>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>
+                  Close
+                </Button>
+                <Button>
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
       </CardFooter>
     </Card>
