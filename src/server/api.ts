@@ -84,7 +84,15 @@ const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunctio
       return res.status(401).json({ message: 'User not found' });
     }
     
-    req.user = user;
+    // Explicitly cast the MongoDB document to the expected type
+    req.user = {
+      _id: user._id as ObjectId,
+      name: user.name as string,
+      email: user.email as string,
+      role: user.role as string,
+      ...user
+    };
+    
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token' });
