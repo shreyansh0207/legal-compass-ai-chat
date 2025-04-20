@@ -138,10 +138,10 @@ app.post('/api/auth/signup', async (req: Request, res: Response) => {
     
     const token = jwt.sign({ userId: result.insertedId }, JWT_SECRET, { expiresIn: '7d' });
     
-    res.status(201).json({ user, token });
+    return res.status(201).json({ user, token });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -168,7 +168,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7d' });
     
-    res.json({
+    return res.json({
       user: {
         _id: user._id,
         name: user.name,
@@ -180,7 +180,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -189,7 +189,7 @@ app.get('/api/auth/verify', authMiddleware, (req: AuthRequest, res: Response) =>
     return res.status(401).json({ message: 'User not authenticated' });
   }
   
-  res.json({
+  return res.json({
     _id: req.user._id,
     name: req.user.name,
     email: req.user.email,
@@ -250,10 +250,10 @@ app.post('/api/lawyer-profile', authMiddleware, upload.single('profileImage'), a
       );
     }
     
-    res.status(200).json({ message: 'Profile updated successfully', profile: profileData });
+    return res.status(200).json({ message: 'Profile updated successfully', profile: profileData });
   } catch (error) {
     console.error('Profile update error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -270,10 +270,10 @@ app.get('/api/lawyer-profile/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Profile not found' });
     }
     
-    res.json(profile);
+    return res.json(profile);
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -301,13 +301,13 @@ app.post('/api/faq', authMiddleware, async (req: AuthRequest, res: Response) => 
     const db = client.db('law_website');
     const result = await db.collection('faqs').insertOne(faqItem);
     
-    res.status(201).json({
+    return res.status(201).json({
       _id: result.insertedId,
       ...faqItem
     });
   } catch (error) {
     console.error('FAQ post error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -352,10 +352,10 @@ app.post('/api/faq/:id/answer', authMiddleware, async (req: AuthRequest, res: Re
       { $push: { answers: answerItem } }
     );
     
-    res.status(200).json({ message: 'Answer added successfully', answer: answerItem });
+    return res.status(200).json({ message: 'Answer added successfully', answer: answerItem });
   } catch (error) {
     console.error('Answer post error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -364,10 +364,10 @@ app.get('/api/faq', async (req: Request, res: Response) => {
     const db = client.db('law_website');
     const faqs = await db.collection('faqs').find().sort({ createdAt: -1 }).toArray();
     
-    res.json(faqs);
+    return res.json(faqs);
   } catch (error) {
     console.error('Get FAQs error:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 

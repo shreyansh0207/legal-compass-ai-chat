@@ -26,18 +26,14 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      onSettled: (_data, error) => {
-        if (error) {
-          console.error("Query error:", error);
-        }
+      onError: (error) => {
+        console.error("Query error:", error);
       },
     },
     mutations: {
       retry: 1,
-      onSettled: (_data, error) => {
-        if (error) {
-          console.error("Mutation error:", error);
-        }
+      onError: (error) => {
+        console.error("Mutation error:", error);
       },
     },
   },
