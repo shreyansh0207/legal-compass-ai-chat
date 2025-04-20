@@ -1,11 +1,22 @@
 
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { MongoClient, ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+
+// Define custom request interface to include user property
+interface AuthRequest extends Request {
+  user?: {
+    _id: ObjectId;
+    name: string;
+    email: string;
+    role: string;
+    [key: string]: any;
+  };
+}
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -38,7 +49,7 @@ const upload = multer({
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'));
+      cb(new Error('Only image files are allowed!') as any);
     }
   }
 });
@@ -57,7 +68,7 @@ async function connectToMongo() {
 connectToMongo();
 
 // Authentication middleware
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     
@@ -65,7 +76,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     const db = client.db('law_website');
     const user = await db.collection('users').findOne({ _id: new ObjectId(decoded.userId) });
     
@@ -81,7 +92,7 @@ const authMiddleware = async (req, res, next) => {
 };
 
 // Auth Routes
-app.post('/api/auth/signup', async (req, res) => {
+app.post('/api/auth/signup', async (req: Request, res: Response) => {
   try {
     const { name, email, password, role } = req.body;
     
@@ -126,7 +137,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     
@@ -165,7 +176,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.get('/api/auth/verify', authMiddleware, (req, res) => {
+app.get('/api/auth/verify', authMiddleware, (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'User not authenticated' });
+  }
+  
   res.json({
     _id: req.user._id,
     name: req.user.name,
@@ -176,8 +191,12 @@ app.get('/api/auth/verify', authMiddleware, (req, res) => {
 });
 
 // Lawyer Profile Routes
-app.post('/api/lawyer-profile', authMiddleware, upload.single('profileImage'), async (req, res) => {
+app.post('/api/lawyer-profile', authMiddleware, upload.single('profileImage'), async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     if (req.user.role !== 'Lawyer') {
       return res.status(403).json({ message: 'Only lawyers can create profiles' });
     }
@@ -230,7 +249,7 @@ app.post('/api/lawyer-profile', authMiddleware, upload.single('profileImage'), a
   }
 });
 
-app.get('/api/lawyer-profile/:id', async (req, res) => {
+app.get('/api/lawyer-profile/:id', async (req: Request, res: Response) => {
   try {
     const db = client.db('law_website');
     let profile;
@@ -251,8 +270,12 @@ app.get('/api/lawyer-profile/:id', async (req, res) => {
 });
 
 // FAQ Routes
-app.post('/api/faq', authMiddleware, async (req, res) => {
+app.post('/api/faq', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     const { question } = req.body;
     
     if (!question) {
@@ -280,8 +303,12 @@ app.post('/api/faq', authMiddleware, async (req, res) => {
   }
 });
 
-app.post('/api/faq/:id/answer', authMiddleware, async (req, res) => {
+app.post('/api/faq/:id/answer', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     if (req.user.role !== 'Lawyer') {
       return res.status(403).json({ message: 'Only lawyers can answer questions' });
     }
@@ -324,7 +351,7 @@ app.post('/api/faq/:id/answer', authMiddleware, async (req, res) => {
   }
 });
 
-app.get('/api/faq', async (req, res) => {
+app.get('/api/faq', async (req: Request, res: Response) => {
   try {
     const db = client.db('law_website');
     const faqs = await db.collection('faqs').find().sort({ createdAt: -1 }).toArray();
@@ -336,6 +363,17 @@ app.get('/api/faq', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// Create server instead of using app.listen directly
+const server = app.listen(port, () => {
   console.log(`API server running on port ${port}`);
 });
+
+// Add error handler for unhandled rejections
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled rejection:', error);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+export default app;

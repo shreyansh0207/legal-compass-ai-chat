@@ -18,39 +18,61 @@ import Auth from "./pages/Auth";
 import LawyerProfile from "./pages/LawyerProfile";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+import { useState } from "react";
 
-const queryClient = new QueryClient();
+// Create query client with better error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      onError: (error) => {
+        console.error("Query error:", error);
+      },
+    },
+    mutations: {
+      retry: 1,
+      onError: (error) => {
+        console.error("Mutation error:", error);
+      },
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/education" element={<Education />} />
-                <Route path="/sports" element={<Sports />} />
-                <Route path="/finance" element={<Finance />} />
-                <Route path="/other" element={<Other />} />
-                <Route path="/lawyers" element={<Lawyers />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/lawyer-profile" element={<LawyerProfile />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [queryClientInstance] = useState(() => queryClient);
+
+  return (
+    <QueryClientProvider client={queryClientInstance}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/education" element={<Education />} />
+                  <Route path="/sports" element={<Sports />} />
+                  <Route path="/finance" element={<Finance />} />
+                  <Route path="/other" element={<Other />} />
+                  <Route path="/lawyers" element={<Lawyers />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/lawyer-profile" element={<LawyerProfile />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
