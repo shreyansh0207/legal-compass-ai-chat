@@ -1,8 +1,10 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Index from "./pages/Index";
@@ -12,6 +14,9 @@ import Finance from "./pages/Finance";
 import Other from "./pages/Other";
 import Lawyers from "./pages/Lawyers";
 import About from "./pages/About";
+import Auth from "./pages/Auth";
+import LawyerProfile from "./pages/LawyerProfile";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,22 +27,27 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/education" element={<Education />} />
-              <Route path="/sports" element={<Sports />} />
-              <Route path="/finance" element={<Finance />} />
-              <Route path="/other" element={<Other />} />
-              <Route path="/lawyers" element={<Lawyers />} />
-              <Route path="/about" element={<About />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/education" element={<Education />} />
+                <Route path="/sports" element={<Sports />} />
+                <Route path="/finance" element={<Finance />} />
+                <Route path="/other" element={<Other />} />
+                <Route path="/lawyers" element={<Lawyers />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/lawyer-profile" element={<LawyerProfile />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

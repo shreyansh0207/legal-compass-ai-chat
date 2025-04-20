@@ -1,0 +1,139 @@
+
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  role: 'Lawyer' | 'User';
+  profileImage?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, role: 'Lawyer' | 'User') => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          const response = await fetch('/api/auth/verify', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem('authToken');
+          }
+        }
+      } catch (error) {
+        console.error('Auth verification failed:', error);
+        localStorage.removeItem('authToken');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to login');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+      
+      toast.success('Login successful!');
+      navigate('/');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Login failed');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signup = async (name: string, email: string, password: string, role: 'Lawyer' | 'User') => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, role }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to signup');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+      
+      toast.success('Signup successful!');
+      
+      if (role === 'Lawyer') {
+        navigate('/lawyer-profile');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Signup failed');
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('authToken');
+    setUser(null);
+    toast.info('Logged out successfully');
+    navigate('/auth');
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
